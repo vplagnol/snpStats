@@ -27,8 +27,8 @@ void set_arrays(const double *, const double *, double,  double **, int);
 /* R interface */
  
 SEXP ld(SEXP X, SEXP Y, SEXP Depth, SEXP Stats, SEXP Symmetric) {
-  char *statnames[7] = {"LLR", "OR", "Q", "Covar", "D.prime", "R.squared", "R"};
-  double *arrays[7];
+  char *statnames[8] = {"LLR", "OR", "Q", "Covar", "D.prime", "R.squared", "R", "cor"};
+  double *arrays[8];
 
   int depth = *INTEGER(Depth);
   
@@ -38,7 +38,7 @@ SEXP ld(SEXP X, SEXP Y, SEXP Depth, SEXP Stats, SEXP Symmetric) {
   if (length(Stats)!=7)
     error("Stats argument");
   int nstats = 0;
-  for (int i=0; i<7; i++)
+  for (int i=0; i<8; i++)
     if (stats[i]) nstats++;
 
   /* X ---- should be a SnpMatrix or an XSnpMatrix */
@@ -140,7 +140,7 @@ SEXP ld(SEXP X, SEXP Y, SEXP Depth, SEXP Stats, SEXP Symmetric) {
       PROTECT(mout_class = MAKE_CLASS("dsCMatrix"));
     else
       PROTECT(mout_class = MAKE_CLASS("dgCMatrix"));
-    for (int i=0, is=0; i<7; i++) {
+    for (int i=0, is=0; i<8; i++) {
       if (stats[i]){
 	SEXP LDstat, x_slot;
 	PROTECT(x_slot = allocVector(REALSXP, NR));
@@ -166,7 +166,7 @@ SEXP ld(SEXP X, SEXP Y, SEXP Depth, SEXP Stats, SEXP Symmetric) {
       else
 	arrays[i] = NULL;
     }
-    UNPROTECT(7); /* i, p, Dim, Dimnames, factors, uplo, dsCMatrix */
+    UNPROTECT(8); /* i, p, Dim, Dimnames, factors, uplo, dsCMatrix */
   }
 
   /* Calculate LD statistics */
@@ -180,7 +180,7 @@ SEXP ld(SEXP X, SEXP Y, SEXP Depth, SEXP Stats, SEXP Symmetric) {
       for (int i=0; i<MX; i++, xi+=N, ij++) {
 	int pr = phase(N, xi, yj, diploid, hapfreqs, margins, &LLR);
 	if (pr) {
-	  for (int i=0; i<7; i++)
+	  for (int i=0; i<8; i++)
 	    if (stats[i]) (arrays[i])[ij] = NA_REAL;
 	}
 	else 
@@ -197,7 +197,7 @@ SEXP ld(SEXP X, SEXP Y, SEXP Depth, SEXP Stats, SEXP Symmetric) {
       for (int i=ifr; i<j; i++, xi+=N, ij++) {
 	int pr = phase(N, xi, xj, diploid, hapfreqs, margins, &LLR);
 	if (pr) {
-	  for (int i=0; i<7; i++)
+	  for (int i=0; i<8; i++)
 	    if (stats[i]) (arrays[i])[ij] = NA_REAL;
 	}
 	else 
@@ -358,4 +358,6 @@ void set_arrays(const double *hapfreqs, const double *margins, double LLR,
   if (arrays[5]) (arrays[5])[ij] = covar*covar/mprod;
   /* R */
   if (arrays[6]) (arrays[6])[ij] = covar/sqrt(mprod);
+
+  if (arrays[7]) (arrays[7])[ij] = -1;
 }
