@@ -269,12 +269,19 @@ int phase(const int N, const unsigned char *x, const unsigned char *y,
     double Dh2 = Dh*Dh;
     w2 /= Dh2;
     w3 /= Dh2;
-    double a = (float) (w1-3.0)/2.0;
-    //double a = (w1-3.0)/2.0;
+    double a = (w1-3.0)/2.0;
     double b = (w2 + w3 - w1 + 1.0)/2.0;
     double c = -w2/2.0;
-    nroot = gsl_poly_solve_cubic(a, b, c, roots, roots+1, roots+2);
-
+    
+    if ((b == 0) && (c == 0)) {  // this trivial case seems to break the GSL code below. Not sure why.
+      nroot = 3;
+      roots[0] = -a;
+      roots[1] =  0;
+      roots[2] =  0;
+    } else {
+      nroot = gsl_poly_solve_cubic(a, b, c, roots, roots+1, roots+2);
+    }
+    
     //fprintf(stdout, "arguments: %f %f %f %f\n", a, b, c, w1);
     //fprintf(stdout, "------ checking now the nb of roots %d: %f %f %f\n", nroot, roots[0], roots[1], roots[2]);  //VP
     
